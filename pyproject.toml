@@ -1,0 +1,15 @@
+[tool.flake8]
+max-line-length = 88
+exclude = [".git", ".mypy_cache", ".pytest_cache", ".venv"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["flyin", "tests"]
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
