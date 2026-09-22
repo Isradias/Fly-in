@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
-from flyin.domain import Graph, Zone, ZoneType
+from flyin.domain import Connection, Graph, Zone, ZoneType
 from flyin.errors import GraphError, ParseError
 
 
@@ -16,6 +16,9 @@ _ZONE = re.compile(
     r"(?:\s+(\[[^]]*\]))?\s*$"
 )
 _METADATA = re.compile(r"\[([^\[\]]*)\]$")
+_CONNECTION = re.compile(
+    r"connection:\s+([^\s-]+)-([^\s-]+)(?:\s+(\[[^]]*\]))?\s*$"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,7 +60,10 @@ class MapParser:
             raise ParseError(f"line {first_number}: expected positive nb_drones value")
         graph = Graph()
         for line_number, line in meaningful[1:]:
-            self._parse_zone(line, line_number, graph)
+            if line.startswith("connection:"):
+                self._parse_connection(line, line_number, graph)
+            else:
+                self._parse_zone(line, line_number, graph)
         if graph.start_name is None:
             raise ParseError("missing start_hub declaration")
         if graph.end_name is None:
@@ -92,6 +98,29 @@ class MapParser:
                     is_end=kind == "end_hub",
                 )
             )
+        except GraphError as error:
+            raise ParseError(f"line {line_number}: {error}") from error
+
+    def _parse_connection(self, line: str, line_number: int, graph: Graph) -> None:
+        """Parse one connection declaration and add it to ``graph``."""
+        match = _CONNECTION.fullmatch(line)
+        if match is None:
+            raise ParseError(f"line {line_number}: invalid connection declaration")
+        first, second, metadata_text = match.groups()
+        metadata = self._metadata(metadata_text, line_number)
+        invalid = set(metadata) - {"max_link_capacity"}
+        if invalid:
+            key = invalid.pop()
+            message = f"line {line_number}: invalid connection metadata {key!r}"
+            raise ParseError(message)
+        capacity_text = metadata.get("max_link_capacity", "1")
+        capacity = self._positive_integer(
+            capacity_text,
+            "max_link_capacity",
+            line_number,
+        )
+        try:
+            graph.add_connection(Connection(first, second, capacity))
         except GraphError as error:
             raise ParseError(f"line {line_number}: {error}") from error
 
