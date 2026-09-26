@@ -4,6 +4,12 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Sequence
+import sys
+
+from flyin.errors import FlyInError
+from flyin.parser import MapParser
+from flyin.simulation import Simulator
+from flyin.visualization import TerminalVisualizer
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,8 +37,17 @@ def main(arguments: Sequence[str] | None = None) -> int:
         Process exit status.
     """
     parser = build_parser()
-    parser.parse_args(arguments)
-    print("Fly-in is being initialized; routing is not available yet.")
+    options = parser.parse_args(arguments)
+    try:
+        definition = MapParser().parse_file(options.map_file)
+        turns = Simulator(definition.graph, definition.drone_count).run()
+    except FlyInError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    for turn in turns:
+        print(turn.render())
+    if options.visual:
+        TerminalVisualizer().render(definition.graph, turns)
     return 0
 
 
