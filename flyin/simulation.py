@@ -52,9 +52,10 @@ class Simulator:
         for drone in self.drones:
             if drone.state is not DroneState.AT_ZONE or drone.zone_name is None:
                 continue
-            choices = self.routes.ordered_choices(drone.zone_name)
+            choices = self.routes.preferred_choices(drone.zone_name)
             if choices:
-                proposals[drone.identifier] = choices[0]
+                index = (drone.identifier - 1) % len(choices)
+                proposals[drone.identifier] = choices[index]
         selected = self._select_moves(proposals, forced)
         movements: list[str] = []
         for drone in forced:

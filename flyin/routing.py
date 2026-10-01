@@ -58,3 +58,20 @@ class RouteFinder:
             priority = 0 if zone.zone_type is ZoneType.PRIORITY else 1
             choices.append((zone.arrival_cost + distances[destination], priority, destination, connection))
         return tuple(item[3] for item in sorted(choices))
+
+    def preferred_choices(self, zone_name: str) -> tuple[Connection, ...]:
+        """Return equally best next hops, preserving priority-zone preference."""
+        choices = self.ordered_choices(zone_name)
+        if not choices:
+            return ()
+        distances = self.distances_to_end()
+        first = choices[0]
+        first_zone = self.graph.zones[first.other(zone_name)]
+        best_cost = first_zone.arrival_cost + distances[first_zone.name]
+        return tuple(
+            connection
+            for connection in choices
+            if self.graph.zones[connection.other(zone_name)].arrival_cost
+            + distances[connection.other(zone_name)]
+            == best_cost
+        )
