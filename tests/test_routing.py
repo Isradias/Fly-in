@@ -4,6 +4,7 @@ import unittest
 
 from flyin.parser import MapParser
 from flyin.routing import RouteFinder
+from flyin.errors import UnsolvableMapError
 
 
 class RoutingTests(unittest.TestCase):
@@ -26,3 +27,11 @@ class RoutingTests(unittest.TestCase):
         )
         choices = RouteFinder(definition.graph).preferred_choices("s")
         self.assertEqual({link.other("s") for link in choices}, {"a", "b"})
+
+    def test_disconnected_map_is_not_a_parse_error(self) -> None:
+        """Reachability is validated after syntactic parsing succeeds."""
+        definition = MapParser().parse_lines(
+            ["nb_drones: 1\n", "start_hub: s 0 0\n", "end_hub: e 1 0\n"]
+        )
+        with self.assertRaises(UnsolvableMapError):
+            RouteFinder(definition.graph).assert_solvable()

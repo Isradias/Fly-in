@@ -6,7 +6,7 @@ install:
 	$(PYTHON) -m pip install -r requirements-dev.txt
 
 run:
-	$(PYTHON) -m flyin $(MAP)
+	$(PYTHON) -m flyin $(MAP) $(ARGS)
 
 debug:
 	$(PYTHON) -m pdb -m flyin $(MAP)
