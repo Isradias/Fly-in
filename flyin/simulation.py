@@ -90,12 +90,22 @@ class Simulator:
         selected = dict(proposals)
         while True:
             invalid = self._first_invalid(selected, forced)
-            if invalid is None:
+            if invalid is not None:
+                candidates = [
+                    drone_id
+                    for drone_id, connection in selected.items()
+                    if connection.other(self._drone(drone_id).zone_name or "") == invalid
+                ]
+                if candidates:
+                    del selected[max(candidates)]
+                    continue
+            invalid_link = self._invalid_connection(selected)
+            if invalid_link is None:
                 return selected
             candidates = [
                 drone_id
                 for drone_id, connection in selected.items()
-                if connection.other(self._drone(drone_id).zone_name or "") == invalid
+                if connection.key == invalid_link
             ]
             if not candidates:
                 return selected
@@ -127,20 +137,19 @@ class Simulator:
             capacity = self.graph.zones[name].capacity
             if capacity is not None and count > capacity:
                 return name
-        return self._invalid_connection(selected, forced)
+        return None
 
     def _invalid_connection(
         self,
         selected: dict[int, Connection],
-        forced: list[Drone],
-    ) -> str | None:
+    ) -> frozenset[str] | None:
         """Return one overloaded link key, or ``None`` when all are valid."""
         usage: dict[frozenset[str], int] = {}
         for connection in selected.values():
             usage[connection.key] = usage.get(connection.key, 0) + 1
         for key, count in usage.items():
             if count > self.graph.connections[key].max_capacity:
-                return next(iter(key))
+                return key
         return None
 
     def _drone(self, identifier: int) -> Drone:

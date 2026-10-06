@@ -24,3 +24,18 @@ class SimulationTests(unittest.TestCase):
         )
         turns = Simulator(definition.graph, definition.drone_count).run()
         self.assertEqual([turn.render() for turn in turns], ["D1-s-r", "D1-r", "D1-e"])
+
+    def test_link_capacity_applies_in_either_direction(self) -> None:
+        """A capacity-one link cannot pass two simultaneous reverse travelers."""
+        definition = MapParser().parse_lines(
+            [
+                "nb_drones: 2\n",
+                "start_hub: s 0 0\n",
+                "hub: a 1 0 [max_drones=2]\n",
+                "end_hub: e 2 0\n",
+                "connection: s-a [max_link_capacity=1]\n",
+                "connection: a-e\n",
+            ]
+        )
+        turns = Simulator(definition.graph, definition.drone_count).run()
+        self.assertEqual([turn.render() for turn in turns], ["D1-a", "D1-e D2-a", "D2-e"])
