@@ -47,7 +47,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
     for turn in turns:
         print(turn.render())
     if options.visual:
-        TerminalVisualizer().render(definition.graph, turns)
+        TerminalVisualizer().render(definition.graph, definition.drone_count, turns)
     return 0
 
 

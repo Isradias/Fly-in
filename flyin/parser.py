@@ -41,6 +41,9 @@ class MapParser:
         try:
             with Path(path).open(encoding="utf-8") as source:
                 return self.parse_lines(source.readlines())
+        except UnicodeDecodeError as error:
+            message = f"cannot decode map file {path!s}: expected UTF-8 text"
+            raise ParseError(message) from error
         except OSError as error:
             message = f"cannot read map file {path!s}: {error.strerror}"
             raise ParseError(message) from error

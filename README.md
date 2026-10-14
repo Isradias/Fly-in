@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by Isradias.*
+*This project has been created as part of the 42 curriculum by icaldas-.*
 
 # Fly-in
 
@@ -21,9 +21,10 @@ make lint
 make lint-strict
 ```
 
-`--visual` writes a concise network and completion summary to standard error; standard
-output remains the mandatory movement-only format. Development tools can be installed
-with `make install`.
+`--visual` writes an ANSI-colored, turn-by-turn view to standard error. It includes each
+movement, the post-turn occupants of every zone, and drones crossing restricted
+connections. Standard output remains the mandatory movement-only format. Development
+tools can be installed with `make install`.
 
 Example map:
 
@@ -61,9 +62,10 @@ uses `O(D + V + E)` space and time in the current capacity-validation scheduler,
 
 ## Visual representation
 
-The `--visual` mode reports the number of zones and links, each zone's type and configured
-color, and the final turn count. It is intentionally an auxiliary stderr view so it cannot
-corrupt the official line-by-line simulation output.
+The `--visual` mode renders every turn on standard error. Movements and zone names use
+their configured ANSI terminal colors; the view then lists the drones occupying each zone
+and any drone in transit to a restricted zone. It is intentionally separate from standard
+output, so it cannot corrupt the official line-by-line simulation format.
 
 ## Benchmarks
 

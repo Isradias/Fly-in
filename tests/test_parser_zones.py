@@ -1,6 +1,8 @@
 """Tests for drone and zone parsing."""
 
 import unittest
+import tempfile
+from pathlib import Path
 
 from flyin.domain import ZoneType
 from flyin.errors import ParseError
@@ -44,3 +46,11 @@ class ZoneParserTests(unittest.TestCase):
             MapParser().parse_lines(
                 ["nb_drones: 1\n", "start_hub: a 0 0\n", "hub: a 1 0\n"]
             )
+
+    def test_non_utf8_map_is_reported_as_a_parse_error(self) -> None:
+        """Invalid file encoding does not leak a decoding exception to the caller."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "map.txt"
+            path.write_bytes(b"\xff")
+            with self.assertRaisesRegex(ParseError, "expected UTF-8 text"):
+                MapParser().parse_file(path)
